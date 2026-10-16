@@ -26,12 +26,12 @@ const getJobs = async (req, res) => {
       const searchRegex = new RegExp(search, 'i');
       jobs = jobs.filter(
         (j) =>
-          j.title.match(searchRegex) ||
-          j.company.match(searchRegex) ||
-          j.location.match(searchRegex) ||
-          j.domain.match(searchRegex) ||
-          j.description.match(searchRegex) ||
-          j.requirements.some((r) => r.match(searchRegex))
+          (j.title && searchRegex.test(j.title)) ||
+          (j.company && searchRegex.test(j.company)) ||
+          (j.location && searchRegex.test(j.location)) ||
+          (j.domain && searchRegex.test(j.domain)) ||
+          (j.description && searchRegex.test(j.description)) ||
+          (Array.isArray(j.requirements) && j.requirements.some((r) => r && searchRegex.test(r)))
       );
     }
 

@@ -112,11 +112,11 @@ const getAlumniProfiles = async (req, res) => {
       const searchRegex = new RegExp(search, 'i');
       profiles = profiles.filter(
         (p) =>
-          p.user?.name.match(searchRegex) ||
-          p.company.match(searchRegex) ||
-          p.designation.match(searchRegex) ||
-          p.domain.match(searchRegex) ||
-          p.skills.some((s) => s.match(searchRegex))
+          (p.user?.name && searchRegex.test(p.user.name)) ||
+          (p.company && searchRegex.test(p.company)) ||
+          (p.designation && searchRegex.test(p.designation)) ||
+          (p.domain && searchRegex.test(p.domain)) ||
+          (Array.isArray(p.skills) && p.skills.some((s) => s && searchRegex.test(s)))
       );
     }
 

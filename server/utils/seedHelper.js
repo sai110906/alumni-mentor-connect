@@ -8,8 +8,15 @@ const Application = require('../models/Application');
 const MentorshipRequest = require('../models/MentorshipRequest');
 const Notification = require('../models/Notification');
 
-const seedDatabase = async () => {
+const seedDatabase = async (force = false) => {
   try {
+    const existingCount = await User.countDocuments();
+    if (existingCount > 0 && !force) {
+      console.log(`Database already has ${existingCount} users. Preserving existing data.`);
+      return;
+    }
+
+    console.log('Populating database with demo accounts and data...');
     // Clear existing collections
     await User.deleteMany({});
     await Profile.deleteMany({});

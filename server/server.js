@@ -6,24 +6,69 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
+const mongoose = require('mongoose');
+
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Allowed origins for CORS (Vercel production, preview branches, localhost, and env)
+const allowedOrigins = [
+  'https://alumni-mentor-connect.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, mobile, server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        process.env.CLIENT_URL === '*'
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive fallback to prevent CORS blocks
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Healthcheck Route
-app.get('/api/health', (req, res) => {
+// Root welcome route
+app.get('/', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
   res.json({
     status: 'OK',
+    service: 'Alumni–Student Mentorship & Job Portal API',
+    database: states[dbState] || 'unknown',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Healthcheck Route
+app.get('/api/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const states = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  res.json({
+    status: dbState === 1 ? 'OK' : 'DEGRADED',
+    database: states[dbState] || 'unknown',
     message: 'Alumni-Student Mentorship & Job Portal API Server is running smoothly',
     timestamp: new Date().toISOString(),
   });
 });
+
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
